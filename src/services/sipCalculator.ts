@@ -57,20 +57,6 @@ function normalizeFloors(floors: number | string): string {
 }
 
 /**
- * Преобразует высоту этажа из числа в строку формата "X,X м"
- */
-function normalizeFloorHeight(height: number): string {
-  return `${height} м`;
-}
-
-/**
- * Преобразует толщину стены из числа в строку формата "SIP-XXX мм"
- */
-function normalizeWallThickness(thickness: number): string {
-  return `SIP-${thickness} мм`;
-}
-
-/**
  * Основная функция расчёта стоимости SIP-дома
  * Использует существующую логику calculatePrice из utils/calculatePrice.ts
  * 

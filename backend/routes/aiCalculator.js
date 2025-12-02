@@ -8,9 +8,14 @@ dotenv.config();
 
 const router = Router();
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Ленивая инициализация OpenAI клиента (только при необходимости)
+const getOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not set');
+  }
+  return new OpenAI({ apiKey });
+};
 
 // Системный промпт для AI-ассистента
 const SYSTEM_MESSAGE = {
@@ -63,6 +68,9 @@ router.post('/ai/calculator-chat', async (req, res) => {
       ? messages
       : [SYSTEM_MESSAGE, ...messages];
 
+    // Получаем клиент OpenAI
+    const client = getOpenAIClient();
+    
     // Первый запрос к OpenAI с tool calling
     const response = await client.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
@@ -181,7 +189,7 @@ router.post('/ai/calculator-chat', async (req, res) => {
         };
 
         // Второй запрос к OpenAI: отдать результат функции и получить красивый ответ для пользователя
-        const followupResponse = await client.chat.completions.create({
+        const followupResponse = await getOpenAIClient().chat.completions.create({
           model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
           messages: [
             ...messagesWithSystem,
@@ -203,7 +211,7 @@ router.post('/ai/calculator-chat', async (req, res) => {
       } catch (calcError) {
         console.error('Ошибка при расчёте:', calcError);
         // Если ошибка в расчёте, возвращаем сообщение об ошибке
-        const errorResponse = await client.chat.completions.create({
+        const errorResponse = await getOpenAIClient().chat.completions.create({
           model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
           messages: [
             ...messagesWithSystem,

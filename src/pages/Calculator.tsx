@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calculator as CalcIcon, Home, Ruler } from 'lucide-react';
 import { CalculatorForm } from '../components/calculator/CalculatorForm';
 import { PriceSummary } from '../components/calculator/PriceSummary';
@@ -70,8 +70,6 @@ export const Calculator: React.FC = () => {
 
   const [isMobile, setIsMobile] = useState(false);
   const [showAiTooltip, setShowAiTooltip] = useState(false);
-  const chatPanelRef = useRef<HTMLDivElement>(null);
-  const areaInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const checkMobile = () => {

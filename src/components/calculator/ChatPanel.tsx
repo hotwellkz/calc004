@@ -177,11 +177,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '', id = 'ai-c
     // Shift+Enter обрабатывается браузером автоматически (новая строка)
   };
 
-  // Правильное форматирование чисел без потери разрядов
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('ru-RU').format(Math.round(value)) + ' ₸';
-  };
-
   const formatMessage = (content: string) => {
     // Улучшенное форматирование: находим числа в тексте и правильно форматируем их
     // Обрабатываем как уже отформатированные числа (с пробелами), так и обычные
