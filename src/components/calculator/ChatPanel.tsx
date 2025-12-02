@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { useSound } from '../../hooks/useSound';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -25,10 +26,24 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '', id = 'ai-c
   const [error, setError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    // Загружаем настройку из localStorage или используем значение по умолчанию
+    const saved = localStorage.getItem('chatSoundEnabled');
+    return saved !== null ? saved === 'true' : true;
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Хуки для воспроизведения звуков
+  const playSendSound = useSound('/sounds/send.wav', 0.4);
+  const playReplySound = useSound('/sounds/reply.wav', 0.5);
+
+  // Сохраняем настройку звука в localStorage при изменении
+  useEffect(() => {
+    localStorage.setItem('chatSoundEnabled', soundEnabled.toString());
+  }, [soundEnabled]);
 
   // Автопрокрутка к последнему сообщению (только внутри контейнера чата)
   const scrollToBottom = () => {
@@ -89,6 +104,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '', id = 'ai-c
     setLoading(true);
     setError(null);
     
+    // Воспроизводим звук отправки
+    if (soundEnabled) {
+      playSendSound();
+    }
+    
     // Возвращаем фокус в поле ввода после очистки
     setTimeout(() => {
       inputRef.current?.focus();
@@ -120,6 +140,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '', id = 'ai-c
         role: 'assistant',
         content: data.content || 'Извините, не удалось получить ответ.'
       }]);
+      
+      // Воспроизводим звук ответа AI
+      if (soundEnabled) {
+        playReplySound();
+      }
     } catch (err) {
       console.error('Chat error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при отправке сообщения';
@@ -130,6 +155,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '', id = 'ai-c
         role: 'assistant',
         content: `Извините, произошла ошибка: ${errorMessage}. Пожалуйста, попробуйте ещё раз или используйте обычный калькулятор.`
       }]);
+      
+      // Воспроизводим звук ответа даже при ошибке (для обратной связи)
+      if (soundEnabled) {
+        playReplySound();
+      }
     } finally {
       setLoading(false);
       // Возвращаем фокус после получения ответа
@@ -294,9 +324,25 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '', id = 'ai-c
             <span className="hidden sm:inline">Отправить</span>
           </button>
         </div>
-        <p className="text-xs text-premium-gray-medium mt-3 text-center">
-          Нажмите Enter для отправки, Shift+Enter для новой строки
-        </p>
+        <div className="flex items-center justify-between mt-3">
+          <p className="text-xs text-premium-gray-medium text-center flex-1">
+            Нажмите Enter для отправки, Shift+Enter для новой строки
+          </p>
+          <label className="flex items-center gap-2 text-xs text-premium-gray-dark cursor-pointer hover:text-premium-gray-darkest transition-colors ml-4">
+            <input
+              type="checkbox"
+              checked={soundEnabled}
+              onChange={(e) => setSoundEnabled(e.target.checked)}
+              className="w-4 h-4 text-premium-green border-premium-gray-light rounded focus:ring-premium-green cursor-pointer"
+            />
+            {soundEnabled ? (
+              <Volume2 className="w-4 h-4 text-premium-green" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-premium-gray-medium" />
+            )}
+            <span className="hidden sm:inline">Звуки</span>
+          </label>
+        </div>
       </div>
     </div>
   );
