@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -8,11 +8,12 @@ export interface ChatMessage {
 
 interface ChatPanelProps {
   className?: string;
+  id?: string;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '', id = 'ai-chat' }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -22,9 +23,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Автопрокрутка к последнему сообщению (только внутри контейнера чата)
   const scrollToBottom = () => {
@@ -41,6 +45,35 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading]);
+
+  // Анимация появления при скролле
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            // Показываем приветственное сообщение на 3 секунды
+            setShowWelcomeMessage(true);
+            setTimeout(() => {
+              setShowWelcomeMessage(false);
+            }, 3000);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (panelRef.current) {
+      observer.observe(panelRef.current);
+    }
+
+    return () => {
+      if (panelRef.current) {
+        observer.unobserve(panelRef.current);
+      }
+    };
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -141,17 +174,35 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col ${className}`} style={{ height: '600px' }}>
+    <div 
+      ref={panelRef}
+      id={id}
+      className={`bg-premium-gray-bg rounded-premium shadow-premium-xl border border-premium-green-light flex flex-col transition-all duration-500 ${className} ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      style={{ height: '600px' }}
+    >
+      {/* Приветственное сообщение при появлении */}
+      {showWelcomeMessage && (
+        <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 bg-premium-green text-white px-5 py-2.5 rounded-full shadow-premium-lg animate-fade-in z-10 whitespace-nowrap">
+          <span className="text-sm font-semibold">Готов рассчитать стоимость! Напишите мне 🙂</span>
+        </div>
+      )}
+
       {/* Заголовок чата */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-blue-50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-100 rounded-lg">
-            <Bot className="w-5 h-5 text-emerald-600" />
+      <div className="p-6 border-b border-premium-gray-light bg-gradient-to-r from-premium-green-lighter via-white to-premium-green-lighter rounded-t-premium">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-premium-green-lighter rounded-xl">
+            <Bot className="w-6 h-6 text-premium-green" />
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-900">AI-Консультант</h3>
-            <p className="text-xs text-gray-600">Опишите дом, и я рассчитаю стоимость</p>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1">
+              <h3 className="text-lg font-bold text-premium-gray-darkest">AI-Консультант</h3>
+              <span className="px-2.5 py-1 bg-premium-green text-white text-xs font-bold rounded-full">
+                новинка
+              </span>
+            </div>
+            <p className="text-sm text-premium-gray-dark">Опишите дом, и я рассчитаю стоимость</p>
           </div>
+          <Sparkles className="w-5 h-5 text-premium-green animate-pulse flex-shrink-0" />
         </div>
       </div>
 
@@ -179,13 +230,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
             )}
             
             <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${
+              className={`max-w-[80%] rounded-input px-5 py-3 shadow-premium ${
                 message.role === 'user'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-900'
+                  ? 'bg-premium-green text-white'
+                  : 'bg-white text-premium-gray-darkest border border-premium-gray-light'
               }`}
             >
-              <div className="text-sm whitespace-pre-wrap">
+              <div className="text-base whitespace-pre-wrap leading-relaxed">
                 {formatMessage(message.content)}
               </div>
             </div>
@@ -222,28 +273,28 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
       </div>
 
       {/* Поле ввода */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <div className="flex gap-2">
+      <div className="p-6 border-t border-premium-gray-light bg-white rounded-b-premium">
+        <div className="flex gap-3">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Опишите дом, который вы хотите построить..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
+            className="flex-1 px-5 py-3 border border-premium-gray-light rounded-input focus:ring-2 focus:ring-premium-green focus:border-premium-green outline-none resize-none text-base text-premium-gray-darkest placeholder-premium-gray-medium shadow-sm focus:shadow-premium transition-all duration-200"
             rows={2}
             disabled={loading}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || loading}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="px-6 py-3 bg-premium-green text-white rounded-input hover:bg-premium-green-dark disabled:bg-premium-gray-medium disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 font-semibold shadow-premium hover:shadow-premium-lg hover:-translate-y-0.5 disabled:hover:translate-y-0"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-5 h-5" />
             <span className="hidden sm:inline">Отправить</span>
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-premium-gray-medium mt-3 text-center">
           Нажмите Enter для отправки, Shift+Enter для новой строки
         </p>
       </div>

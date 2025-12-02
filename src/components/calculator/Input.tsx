@@ -22,8 +22,8 @@ export const Input: React.FC<InputProps> = ({
   error
 }) => {
   return (
-    <div className="space-y-1">
-      <label className="block text-sm font-medium text-gray-700">
+    <div className="space-y-2">
+      <label className="block text-sm font-semibold text-premium-gray-darkest">
         {label}
       </label>
       <input
@@ -33,12 +33,12 @@ export const Input: React.FC<InputProps> = ({
         placeholder={placeholder}
         min={min}
         max={max}
-        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors ${
-          error ? 'border-red-500' : 'border-gray-300'
+        className={`w-full px-4 py-3 border rounded-input focus:ring-2 focus:ring-premium-green focus:border-premium-green outline-none transition-all duration-200 text-base text-premium-gray-darkest placeholder-premium-gray-medium shadow-sm focus:shadow-premium ${
+          error ? 'border-red-400 focus:ring-red-400' : 'border-premium-gray-light'
         }`}
       />
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-red-600 font-medium">{error}</p>
       )}
     </div>
   );
